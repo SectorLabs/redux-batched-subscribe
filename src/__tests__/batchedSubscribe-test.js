@@ -38,6 +38,29 @@ describe('batchedSubscribe()', () => {
     expect(subscribeCallbackSpy.calls.length).toEqual(1);
   });
 
+  it('pauses and resumes subscriptions', () => {
+    const subscribeCallbackSpy = expect.createSpy();
+    const store = createBatchedStore();
+
+    store.pauseSubscriptions();
+    store.subscribe(subscribeCallbackSpy);
+
+    store.dispatch({ type: 'foo' });
+    expect(subscribeCallbackSpy.calls.length).toEqual(0);
+
+    store.resumeSubscriptions();
+    expect(subscribeCallbackSpy.calls.length).toEqual(0);
+
+    store.dispatch({ type: 'foo' });
+    expect(subscribeCallbackSpy.calls.length).toEqual(1);
+
+    store.pauseSubscriptions();
+    store.dispatch({ type: 'foo' });
+    expect(subscribeCallbackSpy.calls.length).toEqual(1);
+    store.resumeSubscriptions(true);
+    expect(subscribeCallbackSpy.calls.length).toEqual(2);
+  });
+
   it('it exposes base subscribe as subscribeImmediate', () => {
     const store = createBatchedStore();
     store.subscribeImmediate();

@@ -5,6 +5,7 @@ export function batchedSubscribe(batch) {
 
   let currentListeners = [];
   let nextListeners = currentListeners;
+  let subscriptionsEnabled = true;
 
   function ensureCanMutateNextListeners() {
     if (nextListeners === currentListeners) {
@@ -43,7 +44,20 @@ export function batchedSubscribe(batch) {
   }
 
   function notifyListenersBatched() {
-    batch(notifyListeners);
+    if (subscriptionsEnabled) {
+      batch(notifyListeners);
+    }
+  }
+
+  function pauseSubscriptions() {
+    subscriptionsEnabled = false;
+  }
+
+  function resumeSubscriptions(notify) {
+    subscriptionsEnabled = true;
+    if (notify) {
+      notifyListenersBatched();
+    }
   }
 
   return next => (...args) => {
@@ -60,7 +74,9 @@ export function batchedSubscribe(batch) {
       ...store,
       dispatch,
       subscribe,
-      subscribeImmediate
+      subscribeImmediate,
+      pauseSubscriptions,
+      resumeSubscriptions,
     };
   };
 }
